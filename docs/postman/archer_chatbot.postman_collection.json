@@ -1,0 +1,355 @@
+{
+  "info": {
+    "name": "archer_chatbot Backend API",
+    "description": "Backend endpoints for the archer_chatbot service. See docs/postman/API.md for the full reference, workflow, and test cases. Set the collection variables `baseUrl` and `identityUrl` first, then run 'Auth / Get staff token' to populate `token`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://localhost:7223", "type": "string" },
+    { "key": "identityUrl", "value": "https://localhost:7275", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "ticketId", "value": "1", "type": "string" },
+    { "key": "productId", "value": "1", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [ { "key": "token", "value": "{{token}}", "type": "string" } ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get staff token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/x-www-form-urlencoded" } ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" },
+                { "key": "client_id", "value": "dev-and-test-tools" },
+                { "key": "client_secret", "value": "dev-and-test-tools-secret" },
+                { "key": "scope", "value": "staff-api" }
+              ]
+            },
+            "url": {
+              "raw": "{{identityUrl}}/connect/token",
+              "host": [ "{{identityUrl}}" ],
+              "path": [ "connect", "token" ]
+            },
+            "description": "Client-credentials grant. The returned access_token carries role=staff. Captured into the `token` variable by the test script (TC-02)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-02: 200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('TC-02: has access_token', () => pm.expect(json.access_token).to.be.a('string').and.not.empty);",
+                  "pm.test('TC-02: token_type is Bearer', () => pm.expect((json.token_type || '').toLowerCase()).to.eql('bearer'));",
+                  "if (json.access_token) { pm.collectionVariables.set('token', json.access_token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "List tickets",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filterByStatus\": null,\n  \"filterByCategoryIds\": null,\n  \"filterByCustomerId\": null,\n  \"startIndex\": 0,\n  \"maxResults\": 20,\n  \"sortBy\": \"TicketId\",\n  \"sortAscending\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets", "host": [ "{{baseUrl}}" ], "path": [ "tickets" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-03: 200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('TC-03: paged result shape', () => {",
+                  "  pm.expect(json).to.have.property('items');",
+                  "  pm.expect(json).to.have.property('totalCount');",
+                  "  pm.expect(json).to.have.property('totalOpenCount');",
+                  "  pm.expect(json).to.have.property('totalClosedCount');",
+                  "});",
+                  "pm.test('TC-03: honours maxResults', () => pm.expect(json.items.length).to.be.at.most(20));",
+                  "if (json.items && json.items.length) { pm.collectionVariables.set('ticketId', String(json.items[0].ticketId)); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List tickets - maxResults too large (400)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startIndex\": 0,\n  \"maxResults\": 101,\n  \"sortBy\": \"TicketId\",\n  \"sortAscending\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets", "host": [ "{{baseUrl}}" ], "path": [ "tickets" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-04: 400 Bad Request', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ticket by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/tickets/{{ticketId}}", "host": [ "{{baseUrl}}" ], "path": [ "tickets", "{{ticketId}}" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-06: 200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('TC-06: id matches and has messages[]', () => {",
+                  "  pm.expect(String(json.ticketId)).to.eql(pm.collectionVariables.get('ticketId'));",
+                  "  pm.expect(json.messages).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get ticket by id - not found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/tickets/999999999", "host": [ "{{baseUrl}}" ], "path": [ "tickets", "999999999" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-07: 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update ticket",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{productId}},\n  \"ticketType\": 0,\n  \"ticketStatus\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ticket/{{ticketId}}", "host": [ "{{baseUrl}}" ], "path": [ "api", "ticket", "{{ticketId}}" ] },
+            "description": "ticketType: Question=0,Idea=1,Complaint=2,Returns=3. ticketStatus: Open=0,Closed=1."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-08: 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Post staff message",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Staff reply added from Postman.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ticket/{{ticketId}}/message", "host": [ "{{baseUrl}}" ], "path": [ "api", "ticket", "{{ticketId}}", "message" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-10: 200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Find products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?searchText=jacket",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "products" ],
+              "query": [ { "key": "searchText", "value": "jacket" } ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-11: 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('TC-11: returns an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Find categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories?searchText=cli",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "categories" ],
+              "query": [ { "key": "searchText", "value": "cli" } ]
+            }
+          }
+        },
+        {
+          "name": "Get manual - missing (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/manual?file=missing.pdf",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "manual" ],
+              "query": [ { "key": "file", "value": "missing.pdf" } ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC-13: 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assistant chat (streaming)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{productId}},\n  \"customerName\": \"Alice Smith\",\n  \"ticketSummary\": \"Zipper stuck\",\n  \"ticketLastCustomerMessage\": \"The zipper won't move\",\n  \"messages\": [\n    { \"isAssistant\": false, \"text\": \"How do I unstick the zipper?\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/assistant/chat", "host": [ "{{baseUrl}}" ], "path": [ "api", "assistant", "chat" ] },
+            "description": "Streams a custom array: opens with '[null', appends ',\\n<AssistantChatReplyItem>' chunks, closes with ']'. Requires a running Ollama model and seeded manuals."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer",
+      "description": "These require a NON-staff authenticated user (test user 'alice', sub=10000) obtained via the OIDC authorization-code flow. Configure OAuth 2.0 under this folder's Authorization tab; the staff client-credentials token will be rejected by GetRequiredCustomerId.",
+      "item": [
+        {
+          "name": "Create ticket",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Waterproof Jacket (AdventureWorks)\",\n  \"message\": \"How do I clean this jacket?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customer/tickets/create", "host": [ "{{baseUrl}}" ], "path": [ "customer", "tickets", "create" ] }
+          }
+        },
+        {
+          "name": "List my tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customer/tickets", "host": [ "{{baseUrl}}" ], "path": [ "customer", "tickets" ] }
+          }
+        },
+        {
+          "name": "Get my ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/customer/tickets/{{ticketId}}", "host": [ "{{baseUrl}}" ], "path": [ "customer", "tickets", "{{ticketId}}" ] }
+          }
+        },
+        {
+          "name": "Post customer message",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Customer reply added from Postman.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/customer/ticket/{{ticketId}}/message", "host": [ "{{baseUrl}}" ], "path": [ "api", "customer", "ticket", "{{ticketId}}", "message" ] }
+          }
+        },
+        {
+          "name": "Close my ticket",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/customer/ticket/{{ticketId}}/close", "host": [ "{{baseUrl}}" ], "path": [ "api", "customer", "ticket", "{{ticketId}}", "close" ] }
+          }
+        },
+        {
+          "name": "Find products (storefront)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customer/products?searchText=jacket",
+              "host": [ "{{baseUrl}}" ],
+              "path": [ "api", "customer", "products" ],
+              "query": [ { "key": "searchText", "value": "jacket" } ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

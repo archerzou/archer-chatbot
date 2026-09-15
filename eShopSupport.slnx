@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/seeddata/" />
+  <Folder Name="/seeddata/dev/">
+    <File Path="seeddata/dev/categories.json" />
+    <File Path="seeddata/dev/customers.json" />
+    <File Path="seeddata/dev/manual-chunks.json" />
+    <File Path="seeddata/dev/products.json" />
+    <File Path="seeddata/dev/tickets.json" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/AppHost/AppHost.csproj" />
+    <Project Path="src/Backend/Backend.csproj" />
+    <Project Path="src/IdentityServer/IdentityServer.csproj" />
+    <Project Path="src/PythonInference/PythonInference.pyproj" Type="888888a0-9f3d-457c-b088-3a5042f75d52">
+      <Build Project="false" />
+    </Project>
+    <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
+  </Folder>
+</Solution>

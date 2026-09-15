@@ -1,0 +1,61 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <AspireVersion>13.5.3</AspireVersion>
+    <AspireToolkitVersion>13.5.0</AspireToolkitVersion>
+    <MicrosoftExtensionsAiVersion>9.4.4-preview.1.25259.16</MicrosoftExtensionsAiVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- .NET Aspire (hosting + client integrations), versioned together -->
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Redis" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.StackExchange.Redis" Version="$(AspireVersion)" />
+    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="$(AspireToolkitVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="10.10.0" />
+
+    <!-- AI -->
+    <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0-beta.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="$(MicrosoftExtensionsAiVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Ollama" Version="$(MicrosoftExtensionsAiVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="$(MicrosoftExtensionsAiVersion)" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers" Version="1.0.1" />
+    <PackageVersion Include="Microsoft.ML.Tokenizers.Data.O200kBase" Version="1.0.1" />
+    <PackageVersion Include="Microsoft.SemanticKernel" Version="1.16.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Core" Version="1.25.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.16.0-alpha" />
+    <PackageVersion Include="SmartComponents.LocalEmbeddings" Version="0.1.0-preview10148" />
+    <PackageVersion Include="SmartComponents.LocalEmbeddings.SemanticKernel" Version="0.1.0-preview10148" />
+
+    <!-- ASP.NET Core / .NET 10 -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.10.0" />
+
+    <!-- Identity -->
+    <!-- Duende 7.0.8 targets net8 but runs on the net10 host via roll-forward; staying on 7.x
+         avoids the breaking API changes in Duende 8 (CancellationToken params, removed helpers). -->
+    <PackageVersion Include="Duende.IdentityServer" Version="7.0.8" />
+    <PackageVersion Include="IdentityModel" Version="7.0.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+
+    <!-- OpenTelemetry -->
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.18.0" />
+
+    <!-- Misc -->
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
+    <PackageVersion Include="System.Memory.Data" Version="10.0.3" />
+    <PackageVersion Include="System.Runtime.Caching" Version="8.0.1" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.2" />
+  </ItemGroup>
+</Project>
