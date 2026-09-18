@@ -327,6 +327,10 @@ paket-files/
 __pycache__/
 *.pyc
 
+# Python virtual environments (created locally, e.g. src/PythonInference/.venv)
+.venv/
+venv/
+
 # Cake - Uncomment if you are using it
 # tools/**
 # !tools/packages.config

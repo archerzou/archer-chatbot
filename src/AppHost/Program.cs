@@ -36,6 +36,7 @@ var ollamaModelName = builder.Configuration["OllamaModel"] ?? "llama3.1";
 var chatCompletion = builder.AddOllama("chatcompletion")
     .WithDataVolume()
     .WithContainerRuntimeArgs(containerGroupLabel);
+
 // Enable GPU acceleration on machines with a supported Nvidia GPU:
 // .WithGPUSupport();
 var chatModel = chatCompletion.AddModel("chat-model", ollamaModelName);
