@@ -35,17 +35,17 @@ capture and test scripts) lives alongside it at
 
 #### Install Python requirements
 
-From the Terminal, at the root of the cloned repo, run:
+The `python-inference` service runs from a virtual environment in `src/PythonInference/.venv`
+(Aspire launches that interpreter automatically when the folder exists). Create it and install the
+requirements:
 
 ```powershell
-pip install -r src/PythonInference/requirements.txt
+py -3.12 -m venv src/PythonInference/.venv
+src/PythonInference/.venv/Scripts/python -m pip install -r src/PythonInference/requirements.txt
 ```
 
-**Note:** If the above command doesn't work on Windows, use the following command:
-
-```powershell
-py -m pip install -r src/PythonInference/requirements.txt
-```
+**Note:** The pinned `torch`/`numpy` versions have wheels for Python 3.11–3.12 but **not** 3.13, so
+create the venv with 3.11 or 3.12. If you don't have a CUDA GPU, the service falls back to CPU.
 
 ### Running the solution
 
