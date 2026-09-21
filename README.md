@@ -2,8 +2,7 @@
 
 A full-stack e-shop assistant: a **React chat UI** backed by a **.NET 10 + Aspire** service that
 answers general questions and business-data questions (products, categories, and product manuals via
-RAG) using an LLM — Ollama locally by default, or OpenAI. It is a slimmed-down derivative of the
-[eShopSupport](https://github.com/dotnet/eShopSupport) sample.
+RAG) using an LLM — Ollama locally by default, or OpenAI. 
 
 ![Archer Chatbot](docs/screenshots/chat_1.png)
 
@@ -75,9 +74,3 @@ and IdentityServer on `:7275`; override with a `.env` (`VITE_API_TARGET`, `VITE_
 Pre-chunked, pre-embedded fictional business data in `seeddata/dev` (products, categories, customers,
 tickets, and manual chunks) is imported into PostgreSQL and Qdrant on Backend startup. Manual search
 runs on the embedded chunks in `manual-chunks.json`.
-
-## Contributing
-
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/)
-(see the [FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact
-[opencode@microsoft.com](mailto:opencode@microsoft.com)).
