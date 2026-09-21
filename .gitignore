@@ -401,3 +401,6 @@ FodyWeavers.xsd
 # JetBrains Rider / IntelliJ IDEA
 .idea/
 *.sln.iml
+
+# Aspire CLI host run log, written to the repo root by `aspire run` (also matched by *.log above)
+apphost.run.log

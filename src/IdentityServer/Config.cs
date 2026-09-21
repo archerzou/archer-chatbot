@@ -47,6 +47,31 @@ public static class Config
         },
         new Client
         {
+            // Public SPA client (Vite WebUI) using authorization code + PKCE. No secret; the SPA
+            // redirects to IdentityServer's own login/register pages and exchanges the code for
+            // tokens the Backend already trusts. See docs/context/frontend-design.md section E4.
+            ClientId = "webui",
+            AllowedGrantTypes = GrantTypes.Code,
+            RequireClientSecret = false,
+            RequirePkce = true,
+
+            RedirectUris = { "http://localhost:5173/auth/callback" },
+            PostLogoutRedirectUris = { "http://localhost:5173/" },
+            AllowedCorsOrigins = { "http://localhost:5173" },
+
+            AllowOfflineAccess = true,
+
+            AllowedScopes =
+            {
+                IdentityServerConstants.StandardScopes.OpenId,
+                IdentityServerConstants.StandardScopes.Profile,
+                IdentityServerConstants.StandardScopes.OfflineAccess,
+                "staff-api",
+                "role",
+            },
+        },
+        new Client
+        {
             ClientId = "staff-webui",
             ClientSecrets = { new Secret("staff-webui-secret".Sha256()) },
 

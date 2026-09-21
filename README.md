@@ -1,87 +1,83 @@
-# archer_chatbot
+# Archer Chatbot
 
-A backend-only .NET 10 chatbot service, orchestrated with .NET Aspire, that answers business
-and general questions using an LLM (Ollama locally by default, or OpenAI). It is a slimmed-down
-derivative of the [eShopSupport](https://github.com/dotnet/eShopSupport) sample, keeping only the
-online, service-side pieces so a separate React frontend can be added later.
+A full-stack e-shop assistant: a **React chat UI** backed by a **.NET 10 + Aspire** service that
+answers general questions and business-data questions (products, categories, and product manuals via
+RAG) using an LLM — Ollama locally by default, or OpenAI. It is a slimmed-down derivative of the
+[eShopSupport](https://github.com/dotnet/eShopSupport) sample.
+
+![Archer Chatbot](docs/screenshots/chat_1.png)
 
 ## Projects
 
 | Project | Role |
 | --- | --- |
-| `src/Backend` | Minimal API: chat/assistant endpoints, catalog, tickets, semantic search |
+| `src/WebUI` | React 19 + Vite chat frontend (docked chatbot, server-backed history, product/citation cards) |
+| `src/Backend` | Minimal API: chat + conversation endpoints, catalog, tickets, semantic search |
 | `src/ServiceDefaults` | Shared Aspire wiring: telemetry, service discovery, chat-client setup |
 | `src/AppHost` | .NET Aspire orchestration (Postgres, Qdrant, Redis, Blob storage, Ollama, Python inference) |
-| `src/IdentityServer` | Duende IdentityServer issuing the JWT tokens the Backend requires |
+| `src/IdentityServer` | Duende IdentityServer issuing the JWTs the Backend requires |
 | `src/PythonInference` | FastAPI + transformers local inference service |
 
 Storage: PostgreSQL (relational), Qdrant (vector), Azure Blob (documents), Redis (pub/sub).
 
-## API
+## Documentation
 
-The Backend HTTP endpoints, authentication, an end-to-end workflow, and test cases are documented
-in [`docs/postman/API.md`](docs/postman/API.md). An importable Postman collection (with token
-capture and test scripts) lives alongside it at
-[`docs/postman/archer_chatbot.postman_collection.json`](docs/postman/archer_chatbot.postman_collection.json).
+- [Backend API — auth, endpoints, workflows](docs/postman/API.md) (+ importable
+  [Postman collection](docs/postman/archer_chatbot.postman_collection.json))
+- [Frontend design & phased plan](docs/context/frontend-design.md)
+- [Security policy](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
 - [.NET 10 SDK](https://dot.net/download) (Aspire 13 ships as NuGet packages — no workload install needed)
-- [Docker Desktop](https://docs.docker.com/engine/install/), started (hosts Postgres, Qdrant, Redis, Azurite, and Ollama)
-- [Python 3.12](https://www.python.org/downloads/) for the local inference service
-- (Optional) An Nvidia GPU to accelerate Ollama — enable it by uncommenting `.WithGPUSupport()` in `src/AppHost/Program.cs`. Without a GPU, Ollama runs on the CPU.
+- [Docker Desktop](https://docs.docker.com/engine/install/), running (hosts Postgres, Qdrant, Redis, Azurite, Ollama)
+- [Node.js 20+](https://nodejs.org/) for the React frontend
+- [Python 3.12](https://www.python.org/downloads/) for the local inference service (wheels require 3.11–3.12, **not** 3.13)
+- (Optional) An Nvidia GPU for Ollama — uncomment `.WithGPUSupport()` in `src/AppHost/Program.cs`
 
-#### Install Python requirements
+### 1. Create the Python inference venv
 
-The `python-inference` service runs from a virtual environment in `src/PythonInference/.venv`
-(Aspire launches that interpreter automatically when the folder exists). Create it and install the
-requirements:
+Aspire launches `src/PythonInference/.venv` automatically when it exists:
 
 ```powershell
 py -3.12 -m venv src/PythonInference/.venv
 src/PythonInference/.venv/Scripts/python -m pip install -r src/PythonInference/requirements.txt
 ```
 
-**Note:** The pinned `torch`/`numpy` versions have wheels for Python 3.11–3.12 but **not** 3.13, so
-create the venv with 3.11 or 3.12. If you don't have a CUDA GPU, the service falls back to CPU.
-
-### Running the solution
+### 2. Run the backend stack (Aspire)
 
 > [!WARNING]
-> Remember to ensure that Docker is started.
+> Make sure Docker is running first.
 
-* (Windows only) Run the application from Visual Studio:
-  - Open the `eShopSupport.slnx` file in Visual Studio
-  - Ensure that `AppHost` is your startup project
-  - Hit Ctrl-F5 to launch .NET Aspire
+```powershell
+dotnet run --project src/AppHost
+```
 
-* Or open `eShopSupport.slnx` in JetBrains Rider / IntelliJ IDEA and run the `AppHost`
-  configuration. The IDE's `.idea/` metadata folder is Git-ignored, so it won't be committed.
+Watch the console for the Aspire dashboard URL (`Login to the dashboard at: http://localhost:17191/login?t=…`).
+Or open `eShopSupport.slnx` in Visual Studio / Rider and run the `AppHost` project.
 
-* Or run the application from your terminal:
+### 3. Run the frontend
 
-  ```powershell
-  dotnet run --project src/AppHost
-  ```
+```powershell
+cd src/WebUI
+npm install
+npm run dev
+```
 
-  then look for lines like this in the console output in order to find the URL to open the Aspire dashboard:
+Open http://localhost:5173, sign in, then chat via the launcher in the bottom-right. Seeded test
+users: **bob / bob** (staff) and **alice / alice** (customer). Defaults assume the Backend on `:5165`
+and IdentityServer on `:7275`; override with a `.env` (`VITE_API_TARGET`, `VITE_OIDC_AUTHORITY`).
 
-  ```sh
-  Login to the dashboard at: http://localhost:17191/login?t=uniquelogincodeforyou
-  ```
+## Sample data
 
-> You may need to install ASP.NET Core HTTPS development certificates first, and then close all browser tabs. Learn more at https://aka.ms/aspnet/https-trust-dev-cert
+Pre-chunked, pre-embedded fictional business data in `seeddata/dev` (products, categories, customers,
+tickets, and manual chunks) is imported into PostgreSQL and Qdrant on Backend startup. Manual search
+runs on the embedded chunks in `manual-chunks.json`.
 
-# Contributing
+## Contributing
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-# Sample data
-
-Pre-chunked, pre-embedded business data lives in `seeddata/dev` (products, categories, customers,
-tickets, and manual chunks) and is imported into PostgreSQL and Qdrant on Backend startup, giving
-the chatbot business content to answer about. All names and content are fictional. The raw PDF
-manuals and the synthetic data generator from the original sample have been removed; the manual
-search runs on the embedded chunks in `manual-chunks.json`.
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/)
+(see the [FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact
+[opencode@microsoft.com](mailto:opencode@microsoft.com)).
