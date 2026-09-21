@@ -40,6 +40,8 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
 });
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("CustomerApi", policy => policy.RequireAuthenticatedUser())
+    // Chat + conversation history are for any signed-in user (staff or customer); handlers scope by 'sub'.
+    .AddPolicy("AuthenticatedApi", policy => policy.RequireAuthenticatedUser())
     .AddFallbackPolicy("StaffApi", policy => policy.RequireRole("staff"));
 
 var app = builder.Build();
@@ -53,5 +55,7 @@ app.MapAssistantApiEndpoints();
 app.MapTicketApiEndpoints();
 app.MapTicketMessagingApiEndpoints();
 app.MapCatalogApiEndpoints();
+app.MapConversationApiEndpoints();
+app.MapChatApiEndpoints();
 
 app.Run();

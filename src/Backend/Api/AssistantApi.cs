@@ -132,13 +132,13 @@ public static class AssistantApi
         }
     }
 
-    private static int? GetProductId(MemoryQueryResult result)
+    internal static int? GetProductId(MemoryQueryResult result)
     {
         var match = Regex.Match(result.Metadata.ExternalSourceName, @"productid:(\d+)");
         return match.Success ? int.Parse(match.Groups[1].Value) : null;
     }
 
-    private static int? GetPageNumber(MemoryQueryResult result)
+    internal static int? GetPageNumber(MemoryQueryResult result)
     {
         var match = Regex.Match(result.Metadata.AdditionalMetadata, @"pagenumber:(\d+)");
         return match.Success ? int.Parse(match.Groups[1].Value) : null;

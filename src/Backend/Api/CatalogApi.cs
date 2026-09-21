@@ -23,7 +23,11 @@ public static class CatalogApi
             .RequireAuthorization(customerApiPolicy);
     }
 
-    private static async Task<IEnumerable<FindCategoriesResult>> SearchCategoriesAsync(AppDbContext dbContext, ITextEmbeddingGenerationService embedder, string? searchText, string? ids)
+    private static Task<IEnumerable<FindCategoriesResult>> SearchCategoriesAsync(AppDbContext dbContext, ITextEmbeddingGenerationService embedder, string? searchText, string? ids)
+        => SearchCategoriesCoreAsync(dbContext, embedder, searchText, ids);
+
+    /// <summary>Reusable category (prefix + semantic) search, shared with the chat category tool.</summary>
+    internal static async Task<IEnumerable<FindCategoriesResult>> SearchCategoriesCoreAsync(AppDbContext dbContext, ITextEmbeddingGenerationService embedder, string? searchText, string? ids)
     {
         IQueryable<ProductCategory> filteredCategories = dbContext.ProductCategories;
 

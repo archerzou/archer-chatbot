@@ -21,11 +21,17 @@ public class AppDbContext : DbContext
 
     public DbSet<Product> Products { get; set; }
 
+    public DbSet<Conversation> Conversations { get; set; }
+
+    public DbSet<ConversationMessage> ConversationMessages { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Ticket>().HasMany(t => t.Messages).WithOne().OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Ticket>().HasOne(t => t.Product);
+        modelBuilder.Entity<Conversation>().HasMany(c => c.Messages).WithOne().OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Conversation>().HasIndex(c => c.OwnerSub);
     }
 
     public static async Task EnsureDbCreatedAsync(IServiceProvider services, string? initialImportDataDir)

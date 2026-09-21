@@ -25,9 +25,38 @@ public static class ServiceCollectionChatClientExtensions
             }
         }
 
+        // The Aspire Ollama resource (CommunityToolkit.Aspire.Hosting.Ollama) does NOT inject
+        // service-discovery endpoints (`services__{serviceName}__...`); it exposes the server as a
+        // connection string (`ConnectionStrings__{serviceName}=Endpoint=http://host:port`). Resolving
+        // a bare `http://{serviceName}` therefore fails with "No such host is known ({serviceName}:80)"
+        // because service discovery has nothing to resolve and falls through to a literal DNS lookup.
+        // Read the concrete endpoint from the connection string instead.
         return hostBuilder.Services.AddOllamaChatClient(
             modelName,
-            new Uri($"http://{serviceName}"));
+            ResolveOllamaEndpoint(hostBuilder.Configuration, serviceName));
+    }
+
+    private static Uri ResolveOllamaEndpoint(IConfiguration configuration, string serviceName)
+    {
+        var connectionString = configuration.GetConnectionString(serviceName);
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+            if (builder.TryGetValue("Endpoint", out var endpoint) && endpoint is string endpointValue
+                && Uri.TryCreate(endpointValue, UriKind.Absolute, out var endpointUri))
+            {
+                return endpointUri;
+            }
+
+            // Some integrations set the bare URL as the whole connection string.
+            if (Uri.TryCreate(connectionString, UriKind.Absolute, out var directUri))
+            {
+                return directUri;
+            }
+        }
+
+        // Fallback to the service-discovery name form (works if endpoints ARE injected).
+        return new Uri($"http://{serviceName}");
     }
 
     public static ChatClientBuilder AddOllamaChatClient(
